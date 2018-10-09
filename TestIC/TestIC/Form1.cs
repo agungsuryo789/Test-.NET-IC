@@ -16,20 +16,31 @@ namespace TestIC
 {
     public partial class Form1 : Form
     {
-        
+        BindingSource bind = new BindingSource();
         public Form1()
         {
             InitializeComponent();
         }
-
-        private void label4_Click(object sender, EventArgs e)
+        void DataFill()
         {
+            try
+            {
+                using (IDbConnection db = new OleDbConnection(ConfigurationManager.ConnectionStrings["konek"].ConnectionString))
+                {
+                    if (db.State == ConnectionState.Closed)
+                        db.Open();
+                    List<mahasiswa> data = db.Query<mahasiswa>("select * from mahasiswa").ToList<mahasiswa>();
+                    
+                   
+                    dataGridView1.DataSource = data;
 
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            dataGridView1.DataSource = DataServices.GetAlltabel1();
+                }
+                DataRefresh();
+            }
+            catch (Exception et)
+            {
+                MessageBox.Show(et.Message);
+            }
         }
         public void clear()
         {
@@ -43,6 +54,16 @@ namespace TestIC
             dataGridView1.Update();
             dataGridView1.Refresh();
         }
+        private void label4_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            DataFill();
+        }
+        
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -142,30 +163,24 @@ namespace TestIC
 
         private void btnCari1_Click(object sender, EventArgs e)
         {
-            int nim = Convert.ToInt32(txtNim.Text);
             try
             {
                 using (IDbConnection db = new OleDbConnection(ConfigurationManager.ConnectionStrings["konek"].ConnectionString))
                 {
                     if (db.State == ConnectionState.Closed)
                         db.Open();
-                    db.Execute("SELECT * FROM mahasiswa WHERE nim = @nim", new { nim = txtNim.Text });
-                    dataGridView1.DataSource = db;
-                    dataGridView1.Update();
-                    dataGridView1.Refresh();
+                    int se = txtNim.Text.Length;
+                    List<mahasiswa> data = db.Query<mahasiswa>("select * from mahasiswa where left (nim,@s) = @nim", new { s = se, nim = txtNim.Text }).ToList();
+                    bind.DataSource = data;
+                    dataGridView1.DataSource = bind;
                     db.Close();
                 }
-                DataRefresh();
             }
             catch (Exception et)
             {
                 MessageBox.Show(et.Message);
             }
-            finally
-            {
-                clear();
-                txtNim.Text = null;
-            }
+
         }
 
         private void btnCari2_Click(object sender, EventArgs e)
@@ -176,22 +191,18 @@ namespace TestIC
                 {
                     if (db.State == ConnectionState.Closed)
                         db.Open();
-                    db.Execute("SELECT * FROM mahasiswa WHERE nama = @nama", new { nama = txtNama.Text });
-                    dataGridView1.DataSource = db;
-                    dataGridView1.Update();
-                    dataGridView1.Refresh();
+                    int se = txtNama.Text.Length;
+                    List<mahasiswa> data = db.Query<mahasiswa>("select * from mahasiswa where left (nama,@s) = @nama", new { s = se, nama = txtNama.Text }).ToList();
+                    bind.DataSource = data;
+                    dataGridView1.DataSource = bind;
                     db.Close();
                 }
-                DataRefresh();
             }
             catch (Exception et)
             {
                 MessageBox.Show(et.Message);
             }
-            finally
-            {
-                clear();
-            }
+            
         }
     }
 }
